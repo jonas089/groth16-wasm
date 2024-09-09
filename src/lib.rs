@@ -96,7 +96,41 @@ fn scalar_mul(p_x: BigUint, p_y: BigUint, k: BigUint) -> G1 {
     (p.into_group() * scalar).into_affine()
 }
 
-fn test_multiplier2_verification_circom_groth16() {
+fn test_multiplier2_verification_circom_groth16(
+    pi_a: G1Affine,
+    pi_b: G2Affine,
+    pi_c: G1Affine,
+    vk_alpha1: G1Affine,
+    vk_beta2: G2Affine,
+    vk_gamma2: G2Affine,
+    vk_delta2: G2Affine,
+    ic_0: G1Affine,
+    ic_1: G1Affine,
+) {
+    let mut vk_x: G1 = ic_0;
+    let public_output = BigUint::from_str("33").unwrap();
+    let vk_x_as_coordinates = extract_g1_coordinates(vk_x);
+    let ic_1_as_coordinates = extract_g1_coordinates(ic_1);
+    let ic_1_scalar_res: G1 =
+        scalar_mul(ic_1_as_coordinates.0, ic_1_as_coordinates.1, public_output);
+    let ic_1_scalar_res_as_coordinates = extract_g1_coordinates(ic_1_scalar_res);
+    vk_x = add_g1_as_coordinates(
+        vk_x_as_coordinates.0,
+        vk_x_as_coordinates.1,
+        ic_1_scalar_res_as_coordinates.0,
+        ic_1_scalar_res_as_coordinates.1,
+    );
+
+    let pairing = <Bn<Config> as Pairing>::multi_pairing(
+        vec![negate_g1_affine(pi_a), vk_alpha1, vk_x, pi_c],
+        vec![pi_b, vk_beta2, vk_gamma2, vk_delta2],
+    )
+    .is_zero();
+    assert!(pairing);
+}
+
+#[test]
+fn circom_multiplier_2() {
     let pi_a_x = parse_biguint_to_fq(
         "4619434547164325081923648243067958995814461722276790408259976269673531268875",
     );
@@ -172,30 +206,7 @@ fn test_multiplier2_verification_circom_groth16() {
         "14718418867019175107712538434554605791301866350066611533272126162199859274702",
     );
     let ic_1: G1 = G1Affine::new_unchecked(ic_1_x, ic_1_y);
-
-    let mut vk_x: G1 = ic_0;
-    let public_output = BigUint::from_str("33").unwrap();
-    let vk_x_as_coordinates = extract_g1_coordinates(vk_x);
-    let ic_1_as_coordinates = extract_g1_coordinates(ic_1);
-    let ic_1_scalar_res: G1 =
-        scalar_mul(ic_1_as_coordinates.0, ic_1_as_coordinates.1, public_output);
-    let ic_1_scalar_res_as_coordinates = extract_g1_coordinates(ic_1_scalar_res);
-    vk_x = add_g1_as_coordinates(
-        vk_x_as_coordinates.0,
-        vk_x_as_coordinates.1,
-        ic_1_scalar_res_as_coordinates.0,
-        ic_1_scalar_res_as_coordinates.1,
+    test_multiplier2_verification_circom_groth16(
+        pi_a, pi_b, pi_c, vk_alpha1, vk_beta2, vk_gamma2, vk_delta2, ic_0, ic_1,
     );
-
-    let pairing = <Bn<Config> as Pairing>::multi_pairing(
-        vec![negate_g1_affine(pi_a), vk_alpha1, vk_x, pi_c],
-        vec![pi_b, vk_beta2, vk_gamma2, vk_delta2],
-    )
-    .is_zero();
-    assert!(pairing);
-}
-
-#[test]
-fn default() {
-    test_multiplier2_verification_circom_groth16();
 }
