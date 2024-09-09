@@ -70,11 +70,12 @@ pub fn verify_groth16_proof(
     inputs: Vec<BigUint>,
 ) -> bool {
     let mut vk_x: G1 = ics[0];
-    let vk_x_as_coordinates = extract_g1_coordinates(vk_x);
     for (idx, ic) in ics.into_iter().enumerate().skip(1) {
         let ic_coords = extract_g1_coordinates(ic);
         let ic_scalar: G1 = scalar_mul(ic_coords.0, ic_coords.1, inputs[idx - 1].clone());
+        println!("processed input: {}, with ic: {}", inputs[idx - 1], idx);
         let ic_scalar_coords = extract_g1_coordinates(ic_scalar);
+        let vk_x_as_coordinates = extract_g1_coordinates(vk_x);
         let vk_x_as_coords = vk_x_as_coordinates.clone();
         vk_x = add_g1_as_coordinates(
             vk_x_as_coords.0,
@@ -194,6 +195,113 @@ mod test {
             vk_delta2,
             vec![ic_0, ic_1],
             vec![BigUint::from_str("33").unwrap()]
+        ));
+    }
+    #[test]
+    fn circuit_with_public_inputs() {
+        let inputs = vec![
+            BigUint::from_str("33").unwrap(),
+            BigUint::from_str("3").unwrap(),
+            BigUint::from_str("5").unwrap(),
+        ];
+        let pi_a_x = parse_biguint_to_fq(
+            "19392468517452974577942618696005895384800799906042106318697233463721693766857",
+        );
+        let pi_a_y = parse_biguint_to_fq(
+            "11733184222349063754296049194104702852248466442201114423019855124829727281495",
+        );
+        let pi_a: G1 = G1Affine::new_unchecked(pi_a_x, pi_a_y);
+
+        let pi_c_x = parse_biguint_to_fq(
+            "14537178142063348772247784963013529007912999377457777806993774035571456724739",
+        );
+        let pi_c_y = parse_biguint_to_fq(
+            "17288173778642609314695611486482435460623347370761147350405389833042911834390",
+        );
+        let pi_c: G1 = G1Affine::new_unchecked(pi_c_x, pi_c_y);
+
+        let pi_b_x = parse_biguint_to_fq2(
+            "7870180900678843028456178167017451907138106017914540035097663772922052759069",
+            "2676154602589869463817353172490741301223256773047921497031846934197445742235",
+        );
+        let pi_b_y = parse_biguint_to_fq2(
+            "14244550656158180977726930281401023179485400919911817896878773580119256293941",
+            "9995198113125036563130298991985119281424711885618696805083921479233677642060",
+        );
+        let pi_b: G2 = G2Affine::new_unchecked(pi_b_x, pi_b_y);
+        let vk_alpha1_x = parse_biguint_to_fq(
+            "1492340889437497096222099246540603464242089375646843408401381497321297191805",
+        );
+        let vk_alpha1_y = parse_biguint_to_fq(
+            "11206096956007645304738557692578347108012874917451451037218479742065106409283",
+        );
+        let vk_alpha1: G1 = G1Affine::new_unchecked(vk_alpha1_x, vk_alpha1_y);
+        let vk_beta2_x = parse_biguint_to_fq2(
+            "6819705648602020464830649412138262446645951538756802487947753732543012497761",
+            "11219895958388416928800243793178587081231733551464793980171225783205073571066",
+        );
+        let vk_beta2_y = parse_biguint_to_fq2(
+            "16232931317995312889893177026572807048495149241311423376955082994080106409796",
+            "221661055415397359078497694134150575803375790398012292192745950633940107116",
+        );
+        let vk_beta2: G2 = G2Affine::new_unchecked(vk_beta2_x, vk_beta2_y);
+        let vk_gamma2_x = parse_biguint_to_fq2(
+            "10857046999023057135944570762232829481370756359578518086990519993285655852781",
+            "11559732032986387107991004021392285783925812861821192530917403151452391805634",
+        );
+        let vk_gamma2_y = parse_biguint_to_fq2(
+            "8495653923123431417604973247489272438418190587263600148770280649306958101930",
+            "4082367875863433681332203403145435568316851327593401208105741076214120093531",
+        );
+        let vk_gamma2 = G2Affine::new_unchecked(vk_gamma2_x, vk_gamma2_y);
+        let vk_delta_2_x = parse_biguint_to_fq2(
+            "5808924139029823792446683085355576723597107871161321088950475604373452728409",
+            "794006949025015063691630962823267254566632109771507942299080649574885489297",
+        );
+        let vk_delta_2_y = parse_biguint_to_fq2(
+            "8755580072416395880353332329707061182225307801858931969661521444593294405758",
+            "6753206114197090706093517144874887058584442501305676249216528764670697270591",
+        );
+        let vk_delta2 = G2Affine::new_unchecked(vk_delta_2_x, vk_delta_2_y);
+
+        let ic_0_x = parse_biguint_to_fq(
+            "10271593014494639556154917775587497160139512735158233514771987430693691505171",
+        );
+        let ic_0_y = parse_biguint_to_fq(
+            "820244293775287856216015804235186748836699371502118506034976181750078184820",
+        );
+        let ic_0: G1 = G1Affine::new_unchecked(ic_0_x, ic_0_y);
+
+        let ic_1_x = parse_biguint_to_fq(
+            "2280705947019161452433451373159244292742431715288144611519626933019071363786",
+        );
+        let ic_1_y = parse_biguint_to_fq(
+            "14167304281910676563969694680310119449755461008189016344190787198178442130210",
+        );
+
+        let ic_1: G1 = G1Affine::new_unchecked(ic_1_x, ic_1_y);
+
+        let ic_2_x = parse_biguint_to_fq(
+            "18065151204330767741864558320702649470751716898622025547025773925205377458663",
+        );
+        let ic_2_y = parse_biguint_to_fq(
+            "12530120613599435509444558723909129574908256194829780222525439733802640757968",
+        );
+
+        let ic_2: G1 = G1Affine::new_unchecked(ic_2_x, ic_2_y);
+
+        let ic_3_x = parse_biguint_to_fq(
+            "2515573466743927184129285920552961694034693235978720556942741443996060153714",
+        );
+        let ic_3_y = parse_biguint_to_fq(
+            "10527719347406676325186974791933879637257851126926242922361792698025261451931",
+        );
+
+        let ic_3: G1 = G1Affine::new_unchecked(ic_3_x, ic_3_y);
+
+        let ics = vec![ic_0, ic_1, ic_2, ic_3];
+        assert!(verify_groth16_proof(
+            pi_a, pi_b, pi_c, vk_alpha1, vk_beta2, vk_gamma2, vk_delta2, ics, inputs
         ));
     }
 }
