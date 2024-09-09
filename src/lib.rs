@@ -11,21 +11,10 @@ type G2 = ark_bn254::g2::G2Affine;
 const BASE_FIELD_MODULUS: &str =
     "21888242871839275222246405745257275088696311157297823662689037894645226208583";
 
-fn parse_biguint(value: &str) -> BigUint {
-    BigUint::parse_bytes(value.as_bytes(), 10).unwrap()
-}
-
 // Helper function to parse a string into a field element
 fn parse_biguint_to_fq(value: &str) -> Fq {
     let big_int = BigUint::parse_bytes(value.as_bytes(), 10).unwrap();
     Fq::from(big_int)
-}
-
-// Helper function to parse two Fq values into Fq2 (for G2 points)
-fn parse_biguint_to_fq2(value1: &str, value2: &str) -> Fq2 {
-    let fq1 = parse_biguint_to_fq(value1);
-    let fq2 = parse_biguint_to_fq(value2);
-    Fq2::new(fq1, fq2)
 }
 
 fn fq_to_biguint(x_fq: &Fq) -> BigUint {
@@ -62,31 +51,6 @@ pub fn extract_g1_coordinates(p: G1) -> (BigUint, BigUint) {
     (fq_to_biguint(p.x().unwrap()), fq_to_biguint(p.y().unwrap()))
 }
 
-#[test]
-fn test_negate_point_unchecked() {
-    let base_field_modulus_biguint = BigUint::from_str(BASE_FIELD_MODULUS).unwrap();
-    let pi_a_x = parse_biguint_to_fq(
-        "4619434547164325081923648243067958995814461722276790408259976269673531268875",
-    );
-    let pi_a_y = parse_biguint_to_fq(
-        "17285941344797724749074955491828477791926771489034344863858176130130219822865",
-    );
-    let pi_a: G1 = G1Affine::new_unchecked(pi_a_x, pi_a_y);
-
-    let a_inv: G1 = negate_g1_affine(pi_a);
-    assert_eq!(pi_a.x(), a_inv.x());
-    println!(
-        "Expect: {:?}",
-        (base_field_modulus_biguint.clone()
-            - BigUint::from_str(
-                "17285941344797724749074955491828477791926771489034344863858176130130219822865"
-            )
-            .unwrap())
-            % base_field_modulus_biguint
-    );
-    println!("Inverse: {:?}", a_inv);
-}
-
 fn scalar_mul(p_x: BigUint, p_y: BigUint, k: BigUint) -> G1 {
     let p = G1::new_unchecked(
         parse_biguint_to_fq(&p_x.to_string()),
@@ -96,7 +60,8 @@ fn scalar_mul(p_x: BigUint, p_y: BigUint, k: BigUint) -> G1 {
     (p.into_group() * scalar).into_affine()
 }
 
-fn test_multiplier2_verification_circom_groth16(
+// todo: generic public inputs
+fn verify_groth16_proof(
     pi_a: G1Affine,
     pi_b: G2Affine,
     pi_c: G1Affine,
@@ -106,7 +71,7 @@ fn test_multiplier2_verification_circom_groth16(
     vk_delta2: G2Affine,
     ic_0: G1Affine,
     ic_1: G1Affine,
-) {
+) -> bool {
     let mut vk_x: G1 = ic_0;
     let public_output = BigUint::from_str("33").unwrap();
     let vk_x_as_coordinates = extract_g1_coordinates(vk_x);
@@ -121,16 +86,21 @@ fn test_multiplier2_verification_circom_groth16(
         ic_1_scalar_res_as_coordinates.1,
     );
 
-    let pairing = <Bn<Config> as Pairing>::multi_pairing(
+    // compute pairing result and return is_zero?
+    <Bn<Config> as Pairing>::multi_pairing(
         vec![negate_g1_affine(pi_a), vk_alpha1, vk_x, pi_c],
         vec![pi_b, vk_beta2, vk_gamma2, vk_delta2],
     )
-    .is_zero();
-    assert!(pairing);
+    .is_zero()
 }
 
 #[test]
 fn circom_multiplier_2() {
+    fn parse_biguint_to_fq2(value1: &str, value2: &str) -> Fq2 {
+        let fq1 = parse_biguint_to_fq(value1);
+        let fq2 = parse_biguint_to_fq(value2);
+        Fq2::new(fq1, fq2)
+    }
     let pi_a_x = parse_biguint_to_fq(
         "4619434547164325081923648243067958995814461722276790408259976269673531268875",
     );
@@ -206,7 +176,7 @@ fn circom_multiplier_2() {
         "14718418867019175107712538434554605791301866350066611533272126162199859274702",
     );
     let ic_1: G1 = G1Affine::new_unchecked(ic_1_x, ic_1_y);
-    test_multiplier2_verification_circom_groth16(
+    assert!(verify_groth16_proof(
         pi_a, pi_b, pi_c, vk_alpha1, vk_beta2, vk_gamma2, vk_delta2, ic_0, ic_1,
-    );
+    ));
 }
