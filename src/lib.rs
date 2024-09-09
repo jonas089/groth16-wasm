@@ -25,7 +25,7 @@ fn parse_biguint_to_fq(value: &str) -> Fq {
 fn parse_biguint_to_fq2(value1: &str, value2: &str) -> Fq2 {
     let fq1 = parse_biguint_to_fq(value1);
     let fq2 = parse_biguint_to_fq(value2);
-    Fq2::new(fq1, fq2) // Create Fq2 from two Fq elements
+    Fq2::new(fq1, fq2)
 }
 
 fn fq_to_biguint(x_fq: &Fq) -> BigUint {
@@ -44,6 +44,22 @@ pub fn negate_g1_affine(p: G1Affine) -> G1Affine {
             (base_field_modulus_biguint.clone() - y_coord) % base_field_modulus_biguint;
         G1Affine::new_unchecked(*x_fq, Fq::from(neg_y_coord))
     }
+}
+
+pub fn add_g1_as_coordinates(p_x: BigUint, p_y: BigUint, q_x: BigUint, q_y: BigUint) -> G1 {
+    let p = G1::new_unchecked(
+        parse_biguint_to_fq(&p_x.to_string()),
+        parse_biguint_to_fq(&p_y.to_string()),
+    );
+    let q = G1::new_unchecked(
+        parse_biguint_to_fq(&q_x.to_string()),
+        parse_biguint_to_fq(&q_y.to_string()),
+    );
+    (p + q).into_affine()
+}
+
+pub fn extract_g1_coordinates(p: G1) -> (BigUint, BigUint) {
+    (fq_to_biguint(p.x().unwrap()), fq_to_biguint(p.y().unwrap()))
 }
 
 #[test]
@@ -154,8 +170,16 @@ fn test_multiplier2_verification_circom_groth16() {
     let ic_1: G1 = G1Affine::new_unchecked(ic_1_x, ic_1_y);
 
     let mut vk_x: G1 = ic_0;
-    let scalar = BigUint::from_str("33").unwrap();
-    vk_x = (vk_x + scalar_mul(ic_1, scalar)).into_affine();
+    let public_output = BigUint::from_str("33").unwrap();
+    let vk_x_as_coordinates = extract_g1_coordinates(vk_x);
+    let ic_1_scalar_res: G1 = scalar_mul(ic_1, public_output);
+    let ic_1_scalar_res_as_coordinates = extract_g1_coordinates(ic_1_scalar_res);
+    vk_x = add_g1_as_coordinates(
+        vk_x_as_coordinates.0,
+        vk_x_as_coordinates.1,
+        ic_1_scalar_res_as_coordinates.0,
+        ic_1_scalar_res_as_coordinates.1,
+    );
 
     let pairing = <Bn<Config> as Pairing>::multi_pairing(
         vec![negate_g1_affine(pi_a), vk_alpha1, vk_x, pi_c],
