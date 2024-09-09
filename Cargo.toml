@@ -1,0 +1,10 @@
+[package]
+name = "casper-groth16"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ark-ec = "0.4.2"
+ark-bn254 = "0.4.0"
+num-bigint = "0.4.6"
+ark-ff = "0.4.2"
