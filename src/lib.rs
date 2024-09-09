@@ -87,7 +87,11 @@ fn test_negate_point_unchecked() {
     println!("Inverse: {:?}", a_inv);
 }
 
-fn scalar_mul(p: G1, k: BigUint) -> G1 {
+fn scalar_mul(p_x: BigUint, p_y: BigUint, k: BigUint) -> G1 {
+    let p = G1::new_unchecked(
+        parse_biguint_to_fq(&p_x.to_string()),
+        parse_biguint_to_fq(&p_y.to_string()),
+    );
     let scalar = Fr::from_be_bytes_mod_order(&k.to_bytes_be());
     (p.into_group() * scalar).into_affine()
 }
@@ -172,7 +176,9 @@ fn test_multiplier2_verification_circom_groth16() {
     let mut vk_x: G1 = ic_0;
     let public_output = BigUint::from_str("33").unwrap();
     let vk_x_as_coordinates = extract_g1_coordinates(vk_x);
-    let ic_1_scalar_res: G1 = scalar_mul(ic_1, public_output);
+    let ic_1_as_coordinates = extract_g1_coordinates(ic_1);
+    let ic_1_scalar_res: G1 =
+        scalar_mul(ic_1_as_coordinates.0, ic_1_as_coordinates.1, public_output);
     let ic_1_scalar_res_as_coordinates = extract_g1_coordinates(ic_1_scalar_res);
     vk_x = add_g1_as_coordinates(
         vk_x_as_coordinates.0,
