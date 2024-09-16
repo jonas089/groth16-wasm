@@ -166,7 +166,7 @@ fn circom_multiplier_2() {
     // ax, ay, bay, bax, bby, bbx
     let vk = compute_vk(ics, inputs);
     let result = alt_bn128_pairing(vec![
-        (pi_a_x, pi_a_y, pi_b_y, pi_b_x, pi_b_y2, pi_b_x2),
+        (a_neg.0, a_neg.1, pi_b_y, pi_b_x, pi_b_y2, pi_b_x2),
         (
             vk_alpha1_x,
             vk_alpha1_y,
