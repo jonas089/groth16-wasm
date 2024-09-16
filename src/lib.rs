@@ -1,2 +1,2 @@
-pub mod bn128;
+pub mod bn;
 pub mod bn254;
