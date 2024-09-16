@@ -113,7 +113,6 @@ pub fn alt_bn128_pairing(values: Vec<(U256, U256, U256, U256, U256, U256)>) -> b
                 bn::AffineG2::new(ba, bb).unwrap().into()
             }
         };
-        println!("ok");
         pairs.push((g1_a, g1_b));
     }
 
