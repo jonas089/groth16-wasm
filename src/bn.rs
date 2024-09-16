@@ -2,8 +2,7 @@
 use bn::{AffineG1, Fq, Fr, Group, G1};
 use casper_types::U256;
 
-const BASE_FIELD_MODULUS: &str =
-    "21888242871839275222246405745257275088696311157297823662689037894645226208583";
+use crate::BASE_FIELD_MODULUS;
 
 pub fn compute_vk(ics: Vec<AffineG1>, inputs: Vec<U256>) -> (U256, U256) {
     let mut vk: AffineG1 = ics[0];
@@ -55,6 +54,13 @@ pub fn fq_to_u256(fq: Fq) -> U256 {
 pub fn fq_from_u256(u256: U256) -> Fq {
     let mut buf = [0u8; 32];
     u256.to_big_endian(&mut buf);
+    let reconstructed = U256::from_be_bytes(buf.clone());
+    assert_eq!(reconstructed, u256);
+
+    let fq = Fq::from_slice(&buf).unwrap();
+    let u256_rec = fq_to_u256(fq);
+    assert_eq!(u256_rec, u256);
+
     Fq::from_slice(&buf).unwrap()
 }
 
@@ -91,10 +97,10 @@ pub fn alt_bn128_pairing(values: Vec<(U256, U256, U256, U256, U256, U256)>) -> b
     for (ax, ay, bax, bay, bbx, bby) in values {
         let ax = fq_from_u256(ax);
         let ay = fq_from_u256(ay);
-        let bay = fq_from_u256(bay);
         let bax = fq_from_u256(bax);
-        let bby = fq_from_u256(bby);
+        let bay = fq_from_u256(bay);
         let bbx = fq_from_u256(bbx);
+        let bby = fq_from_u256(bby);
 
         let g1_a = {
             if ax.is_zero() && ay.is_zero() {
@@ -113,7 +119,6 @@ pub fn alt_bn128_pairing(values: Vec<(U256, U256, U256, U256, U256, U256)>) -> b
                 bn::AffineG2::new(ba, bb).unwrap().into()
             }
         };
-        println!("ok");
         pairs.push((g1_a, g1_b));
     }
 

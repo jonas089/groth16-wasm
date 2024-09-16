@@ -5,9 +5,9 @@ use ark_ec::{models::bn::Bn, pairing::Pairing, AffineRepr, CurveGroup};
 use ark_ff::{BigInteger, PrimeField, Zero};
 use num_bigint::BigUint;
 
+use crate::BASE_FIELD_MODULUS;
+
 pub type G1 = ark_bn254::g1::G1Affine;
-const BASE_FIELD_MODULUS: &str =
-    "21888242871839275222246405745257275088696311157297823662689037894645226208583";
 
 pub fn parse_biguint_to_fq(value: &str) -> Fq {
     let big_int = BigUint::parse_bytes(value.as_bytes(), 10).unwrap();
