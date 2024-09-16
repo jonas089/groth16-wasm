@@ -5,7 +5,7 @@ mod test {
     use ark_bn254::{Fq2, G1Affine, G2Affine};
     use num_bigint::BigUint;
 
-    use casper_groth16::{parse_biguint_to_fq, verify_groth16_proof, G1};
+    use casper_groth16::bn254::{parse_biguint_to_fq, verify_groth16_proof, G1};
     type G2 = ark_bn254::g2::G2Affine;
 
     fn parse_biguint_to_fq2(value1: &str, value2: &str) -> Fq2 {

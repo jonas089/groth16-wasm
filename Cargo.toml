@@ -8,3 +8,7 @@ ark-ec = "0.4.2"
 ark-bn254 = "0.4.0"
 num-bigint = "0.4.6"
 ark-ff = "0.4.2"
+casper-types = { git = "https://github.com/mpapierski/casper-node", branch = "altbn128", default-features = false }
+casper-contract = { git = "https://github.com/mpapierski/casper-node", branch = "altbn128", default-features = false }
+serde = "1"
+bn = { version = "0.5", package = "zeropool-bn", default-features = false }
