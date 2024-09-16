@@ -94,12 +94,12 @@ pub fn alt_bn128_mul(x: U256, y: U256, scalar: U256) -> (U256, U256) {
 
 pub fn alt_bn128_pairing(values: Vec<(U256, U256, U256, U256, U256, U256)>) -> bool {
     let mut pairs = Vec::with_capacity(values.len());
-    for (ax, ay, bax, bay, bbx, bby) in values {
+    for (ax, ay, bax, bbx, bay, bby) in values {
         let ax = fq_from_u256(ax);
         let ay = fq_from_u256(ay);
-        let bax = fq_from_u256(bax);
+        let bax: Fq = fq_from_u256(bax);
+        let bbx: Fq = fq_from_u256(bbx);
         let bay = fq_from_u256(bay);
-        let bbx = fq_from_u256(bbx);
         let bby = fq_from_u256(bby);
 
         let g1_a = {
@@ -110,8 +110,8 @@ pub fn alt_bn128_pairing(values: Vec<(U256, U256, U256, U256, U256, U256)>) -> b
             }
         };
         let g1_b = {
-            let ba = bn::Fq2::new(bax, bay);
-            let bb = bn::Fq2::new(bbx, bby);
+            let ba = bn::Fq2::new(bax, bbx);
+            let bb = bn::Fq2::new(bay, bby);
 
             if ba.is_zero() && bb.is_zero() {
                 bn::G2::zero()

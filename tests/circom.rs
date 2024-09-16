@@ -1,8 +1,5 @@
 use bn::AffineG1;
-use casper_groth16::{
-    bn::{alt_bn128_pairing, compute_vk, fq_from_u256, fq_to_u256, negate_g1_affine},
-    BASE_FIELD_MODULUS,
-};
+use casper_groth16::bn::{alt_bn128_pairing, compute_vk, fq_from_u256, negate_g1_affine};
 use casper_types::U256;
 
 #[test]
@@ -161,21 +158,7 @@ fn circom_multiplier_2_bn() {
         AffineG1::new(fq_from_u256(ic_1_x), fq_from_u256(ic_1_y)).unwrap(),
     ];
     let inputs = vec![U256::from(33)];
-    /*
-        vec![negate_g1_affine(pi_a), vk_alpha1, vk_x, pi_c],
-        vec![pi_b, vk_beta2, vk_gamma2, vk_delta2],
-    */
-    // ax, ay, bay, bax, bby, bbx
     let vk = compute_vk(ics, inputs);
-
-    let intermediate = alt_bn128_pairing(vec![(
-        pi_c_x,
-        pi_c_y,
-        vk_delta_2_x,
-        vk_delta_2_x2,
-        vk_delta_2_y,
-        vk_delta_2_y2,
-    )]);
 
     let result = alt_bn128_pairing(vec![
         (a_neg.0, a_neg.1, pi_b_x, pi_b_x2, pi_b_y, pi_b_y2),
@@ -204,6 +187,7 @@ fn circom_multiplier_2_bn() {
             vk_delta_2_y2,
         ),
     ]);
+    assert!(result);
 }
 
 #[test]
