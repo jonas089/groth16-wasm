@@ -6,25 +6,11 @@ Point coordinates and public inputs are represented as [num_bigint::BigUint](htt
 
 Other branches may depend on `casper_types` e.g. [U256](https://docs.rs/casper-types/latest/casper_types/struct.U256.html) for public inputs and coordinates.
 
-# ECC Api
 
+Both Arkworks and bn use the alt_bn128 (=bn254) curve.
 
-Addition `G1`:
-```rust
-pub fn add_g1_as_coordinates(p_x: BigUint, p_y: BigUint, q_x: BigUint, q_y: BigUint) -> G1
-```
+# Arkworks bn
+Arkworks bn is supported, see `bn254.rs`.
 
-Scalar multiplication `G1`:
-```rust
-fn scalar_mul(p_x: BigUint, p_y: BigUint, k: BigUint) -> G1
-```
-
-# Todos
-- Check that inputs are field elements prior to processing `vk_x`:
-
-```
-require(input[i] < SNARK_SCALAR_FIELD, "verifier-gte-snark-scalar-field");
-```
-[source](https://github.com/tornadocash/tornado-core/blob/1ef6a263ac6a0e476d063fcb269a9df65a1bd56a/contracts/Verifier.sol#L216C7-L216C81)
-
-- Expose `pairing` so that it takes point coordinates instead of Affine points.
+# Zeropool bn
+Zeropool bn is supported, see `bn.rs`.
