@@ -1,8 +1,11 @@
 // Written for the Casper Blockchain with casper_types 5
-use bn::{AffineG1, Fq, Fr, Group, G1};
-use casper_types::U256;
-
 use crate::BASE_FIELD_MODULUS;
+use bn::{AffineG1, Fq, Fr, Group, G1};
+#[cfg(feature = "casper")]
+use casper_contract::contract_api::builtins::altbn128::{
+    alt_bn128_add, alt_bn128_mul, alt_bn128_pairing, Fq, Pair, G1,
+};
+use casper_types::U256;
 
 pub fn compute_vk(ics: Vec<AffineG1>, inputs: Vec<U256>) -> (U256, U256) {
     let mut vk: AffineG1 = ics[0];
@@ -64,6 +67,13 @@ pub fn fq_from_u256(u256: U256) -> Fq {
     Fq::from_slice(&buf).unwrap()
 }
 
+#[cfg(feature = "casper")]
+pub fn alt_bn128_add() {}
+
+#[cfg(feature = "casper")]
+pub fn alt_bn128_mul() {}
+
+#[cfg(not(feature = "casper"))]
 pub fn alt_bn128_add(x1: U256, y1: U256, x2: U256, y2: U256) -> (U256, U256) {
     let p1 = point_from_coords(x1, y1);
     let p2 = point_from_coords(x2, y2);
@@ -78,6 +88,7 @@ pub fn alt_bn128_add(x1: U256, y1: U256, x2: U256, y2: U256) -> (U256, U256) {
     (x, y)
 }
 
+#[cfg(not(feature = "casper"))]
 pub fn alt_bn128_mul(x: U256, y: U256, scalar: U256) -> (U256, U256) {
     let p = point_from_coords(x, y);
 
@@ -94,7 +105,7 @@ pub fn alt_bn128_mul(x: U256, y: U256, scalar: U256) -> (U256, U256) {
 
 pub fn alt_bn128_pairing(values: Vec<(U256, U256, U256, U256, U256, U256)>) -> bool {
     let mut pairs = Vec::with_capacity(values.len());
-    for (ax, ay, bax, bbx, bay, bby) in values {
+    for (ax, ay, bax, bay, bbx, bby) in values {
         let ax = fq_from_u256(ax);
         let ay = fq_from_u256(ay);
         let bax: Fq = fq_from_u256(bax);
@@ -110,8 +121,8 @@ pub fn alt_bn128_pairing(values: Vec<(U256, U256, U256, U256, U256, U256)>) -> b
             }
         };
         let g1_b = {
-            let ba = bn::Fq2::new(bax, bbx);
-            let bb = bn::Fq2::new(bay, bby);
+            let ba = bn::Fq2::new(bax, bay);
+            let bb = bn::Fq2::new(bbx, bby);
 
             if ba.is_zero() && bb.is_zero() {
                 bn::G2::zero()
