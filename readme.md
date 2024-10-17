@@ -1,3 +1,6 @@
+> [!WARNING]
+> Do not use this verifier in Production! It has not been audited and was implemented by a single engineer.
+
 # Groth16 Verifier that depends on arkworks
 
 This branch depends on [ark_bn254](https://crates.io/crates/ark-bn254), [ark_ec](https://crates.io/crates/ark-ec) and [ark_ff](https://crates.io/crates/ark-ec).
